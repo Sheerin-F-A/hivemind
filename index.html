@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reddit Hive Mind</title>
+    <link rel="stylesheet" href="main.css">
+</head>
+
+<body class="login-page">
+    <div class="container">
+        <!-- Left Section -->
+        <div class="hero-section">
+            <div class="brand-label">REDDIT HIVE MIND</div>
+            <h1 class="hero-title">
+                Welcome To The<br>
+                Reddit<br>
+                Hive Mind.
+            </h1>
+            <ul class="tagline-list">
+                <li>Collective intelligence, curated.</li>
+                <li>Surface what actually matters.</li>
+                <li>Your Reddit, intelligently filtered.</li>
+            </ul>
+        </div>
+
+        <!-- Right Section - Login Card -->
+        <div class="login-card">
+            <h2>Login To Your Reddit Account</h2>
+            <p class="subtitle">Enter your credentials to continue</p>
+
+            <div class="error-message" id="errorMessage" style="display: none;">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M8 1.5L1.5 14.5H14.5L8 1.5Z" stroke="#FF4500" stroke-width="1.5" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                    <path d="M8 6V9" stroke="#FF4500" stroke-width="1.5" stroke-linecap="round" />
+                    <circle cx="8" cy="11.5" r="0.5" fill="#FF4500" />
+                </svg>
+                <span>Failed login due to wrong username, email or password.</span>
+            </div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email">Email / Username</label>
+                    <div class="input-wrapper">
+                        <svg class="input-icon" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="2" y="4" width="16" height="12" rx="2" stroke="#86868B" stroke-width="1.5" />
+                            <path d="M2 6L10 11L18 6" stroke="#86868B" stroke-width="1.5" stroke-linecap="round" />
+                        </svg>
+                        <input type="text" id="email" placeholder="TechEnthusiast99" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="label-row">
+                        <label for="password">Password</label>
+                        <a href="#" class="forgot-link">Forgot?</a>
+                    </div>
+                    <div class="input-wrapper">
+                        <svg class="input-icon" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="4" y="9" width="12" height="8" rx="2" stroke="#86868B" stroke-width="1.5" />
+                            <path d="M7 9V6C7 4.34315 8.34315 3 10 3C11.6569 3 13 4.34315 13 6V9" stroke="#86868B"
+                                stroke-width="1.5" />
+                        </svg>
+                        <input type="password" id="password" placeholder="••••••••" required>
+                        <button type="button" class="toggle-password" id="togglePassword">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                <path
+                                    d="M10 7C8.34315 7 7 8.34315 7 10C7 11.6569 8.34315 13 10 13C11.6569 13 13 11.6569 13 10C13 8.34315 11.6569 7 10 7Z"
+                                    stroke="#86868B" stroke-width="1.5" />
+                                <path d="M10 4C5 4 2 10 2 10C2 10 5 16 10 16C15 16 18 10 18 10C18 10 15 4 10 4Z"
+                                    stroke="#86868B" stroke-width="1.5" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-primary" id="loginBtn">
+                    <span class="btn-text">Log In</span>
+                    <span class="btn-loading" style="display: none;">
+                        <svg class="spinner" width="20" height="20" viewBox="0 0 20 20">
+                            <circle cx="10" cy="10" r="8" stroke="white" stroke-width="2" fill="none"
+                                stroke-dasharray="40" stroke-dashoffset="10" />
+                        </svg>
+                        Logging In...
+                    </span>
+                </button>
+
+                <p class="signup-text">
+                    Don't have an account? <a href="https://www.reddit.com/register" target="_blank"
+                        class="signup-link">Sign up on Reddit</a>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <footer class="disclaimer">
+        Reddit Hive Mind is an independent tool. Not affiliated with Reddit, Inc.
+    </footer>
+
+    <script src="login.js"></script>
+</body>
+
+</html>
