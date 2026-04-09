@@ -3,13 +3,14 @@ import urllib.parse
 from playwright.async_api import async_playwright
 
 # Discard entries containing these automation strings completely
-BOT_FILTER_TERMS = ["i am a bot", "action was performed automatically", "opt-out", "beep boop", "automoderator", "bot account"]
+BOT_FILTER_TERMS = ["i am a bot", "action was performed automatically", "opt-out", "beep boop", "automoderator", "bot account", "check my bio for crypto"]
 # Log but flag as Spam explicitly for NLP algorithms bypassing
 SPAM_FILTER_TERMS = ["crypto", "nft", "solana", "eth", "giveaway", "free money"]
 
 async def scrape_reddit_posts(query: str, limit: int = 15) -> list[dict]:
     """Uses Playwright headless browser to load Reddit Search and extract live posts."""
     results = []
+    seen_texts = set()
     
     async with async_playwright() as p:
         # Launch headless browser
@@ -58,6 +59,11 @@ async def scrape_reddit_posts(query: str, limit: int = 15) -> list[dict]:
                     # If body is empty, fall back to analyzing the title as the organic sentiment
                     sentiment_text = body if len(body) > len(title) else title
                         
+                    # Deduplication Strategy
+                    if sentiment_text in seen_texts:
+                        continue
+                    seen_texts.add(sentiment_text)
+                    
                     score_attr = await post.get_attribute("score")
                     try:
                         score = int(score_attr) if score_attr else 0
@@ -93,6 +99,7 @@ async def scrape_reddit_posts(query: str, limit: int = 15) -> list[dict]:
 async def scrape_reddit_user(username: str, limit: int = 15) -> list[dict]:
     """Scrapes actual public comments dynamically from a user's organic profile."""
     results = []
+    seen_texts = set()
     
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)
@@ -172,6 +179,11 @@ async def scrape_reddit_user(username: str, limit: int = 15) -> list[dict]:
                             
                         # Authentic Spam Flagging
                         is_spam_flag = any(spam_term in lowercase_combined for spam_term in SPAM_FILTER_TERMS)
+                        
+                        # Deduplication Strategy
+                        if body in seen_texts:
+                            continue
+                        seen_texts.add(body)
                             
                         results.append({
                             "body": body,
