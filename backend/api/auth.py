@@ -40,16 +40,20 @@ async def login(data: LoginRequest, request: Request, db: AsyncSession = Depends
     if not user:
         # Phase 7: Organic Profile Verification
         try:
-            if username.lower() in ["demo1", "demo2"]:
-                import json
-                import os
+            import json
+            import os
+            # If the user exactly typed a name that has a prebuilt fake JSON mock:
+            filepath = None
+            if os.path.exists(f"{username}.json"):
+                filepath = f"{username}.json"
+            elif os.path.exists(f"{username.lower()}.json"):
                 filepath = f"{username.lower()}.json"
-                if os.path.exists(filepath):
-                    with open(filepath, "r") as f:
-                        profile_comments = json.load(f)
-                else:
-                    profile_comments = []
+                
+            if filepath:
+                with open(filepath, "r") as f:
+                    profile_comments = json.load(f)
             else:
+                # Run the actual scrape hook
                 profile_comments = await scrape_reddit_user(username)
         except Exception:
             raise HTTPException(status_code=404, detail="Could not physically reach Reddit profile.")

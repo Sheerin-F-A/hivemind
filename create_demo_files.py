@@ -38,7 +38,7 @@ def generate_demo1():
             "timestamp": past_time
         })
         
-    with open('demo1.json', 'w') as f:
+    with open('TechEnthusiast99.json', 'w') as f:
         json.dump(comments, f, indent=4)
         
 def generate_demo2():
@@ -75,10 +75,10 @@ def generate_demo2():
             "timestamp": past_time
         })
         
-    with open('demo2.json', 'w') as f:
+    with open('GamerDude_X.json', 'w') as f:
         json.dump(comments, f, indent=4)
 
 if __name__ == "__main__":
     generate_demo1()
     generate_demo2()
-    print("Generated demo1.json and demo2.json successfully.")
+    print("Generated TechEnthusiast99.json and GamerDude_X.json successfully.")
