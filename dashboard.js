@@ -119,8 +119,9 @@ function updateDOMCounters(data) {
         if (breakdownSource) {
             const largeScore = card.querySelector('.large-score');
             
-            // Mathematically normalize an exact score 0-100 logic
-            let cardScore = Math.floor(breakdownSource.positive + (breakdownSource.neutral * 0.5));
+            // Mathematically normalize an exact score 0-100 logic using a base-50 pivot
+            // Positive adds points, Negative subtracts points from the baseline
+            let cardScore = Math.floor(50 + (breakdownSource.positive * 0.5) - (breakdownSource.negative * 0.5));
             if (largeScore) largeScore.textContent = cardScore;
             
             const cardLabel = card.querySelector('.score-label');
