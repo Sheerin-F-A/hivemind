@@ -40,7 +40,17 @@ async def login(data: LoginRequest, request: Request, db: AsyncSession = Depends
     if not user:
         # Phase 7: Organic Profile Verification
         try:
-            profile_comments = await scrape_reddit_user(username)
+            if username.lower() in ["demo1", "demo2"]:
+                import json
+                import os
+                filepath = f"{username.lower()}.json"
+                if os.path.exists(filepath):
+                    with open(filepath, "r") as f:
+                        profile_comments = json.load(f)
+                else:
+                    profile_comments = []
+            else:
+                profile_comments = await scrape_reddit_user(username)
         except Exception:
             raise HTTPException(status_code=404, detail="Could not physically reach Reddit profile.")
             
@@ -76,7 +86,7 @@ async def login(data: LoginRequest, request: Request, db: AsyncSession = Depends
                 thread_id="vault_history",
                 thread_title=c.get("title", "Organic Personal Account History"),
                 body=c["body"],
-                created_utc=int(time.time()) - random.randint(100, 300000),
+                created_utc=c.get("timestamp", int(time.time()) - random.randint(100, 300000)),
                 score=c["score"],
                 sentiment_score=compound,
                 sentiment_label=label,
