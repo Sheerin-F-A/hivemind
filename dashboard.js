@@ -270,9 +270,10 @@ function setupBreakdownToggles() {
 function setupTimelineSelector() {
     const timelineSelect = document.getElementById('timelineSelect');
     if (timelineSelect) {
-        timelineSelect.addEventListener('change', function () {
-            // In production, this would fetch new data based on selected timeline
+        timelineSelect.addEventListener('change', async function () {
             console.log('Timeline changed to:', this.value, 'days');
+            const query = document.getElementById('searchInput')?.value.trim() || "";
+            await fetchAndRenderData(query, this.value);
         });
     }
 }

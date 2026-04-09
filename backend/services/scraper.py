@@ -147,17 +147,23 @@ async def scrape_reddit_user(username: str, limit: int = 15) -> list[dict]:
                         score = int(score_attr) if score_attr else 1
                         
                         # Try extracting native context for User profiles
-                        subreddit = "unknown"
-                        title = "Organic Personal Post"
-                        try:
-                            # A shreddit-comment usually implies it belongs to a post parent
-                            href = await comment.evaluate("el => { const a = el.querySelector('a'); return a ? a.href : ''; }")
-                            if href and "/r/" in href:
-                                subreddit = href.split("/r/")[1].split("/")[0]
-                                if "/comments/" in href:
+                        # Try extracting native context for User profiles
+                        subreddit = await comment.get_attribute("subreddit-prefixed-name")
+                        if subreddit:
+                            subreddit = subreddit.replace("r/", "")
+                        else:
+                            subreddit = "unknown"
+                            
+                        title = await comment.get_attribute("post-title")
+                        if not title:
+                            try:
+                                href = await comment.evaluate("el => { const a = el.querySelector('a[href*=\"/comments/\"]'); return a ? a.href : ''; }")
+                                if href and "/comments/" in href:
                                     title = href.split("/comments/")[1].split("/")[1].replace("_", " ").title()
-                        except Exception:
-                            pass
+                                else:
+                                    title = "Organic Personal Post"
+                            except Exception:
+                                title = "Organic Personal Post"
                         
                         # Bot Extinction Layer for User
                         lowercase_combined = body.lower()
