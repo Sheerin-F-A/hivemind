@@ -2,64 +2,95 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
 import os
 import secrets
+import time
+import random
 from typing import Optional
-from backend.models.database import get_db_session, User
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from nltk.sentiment import SentimentIntensityAnalyzer
+
+from backend.models.database import get_db_session, User, Comment
+from backend.services.scraper import scrape_reddit_user
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
-# Two authentic looking mock profiles
-MOCK_PROFILES = {
-    "techenthusiast99": {
-        "reddit_id": "t2_mock_tech99"
-    },
-    "criticalgamerx": {
-        "reddit_id": "t2_mock_gamerx"
-    }
-}
+try:
+    sia = SentimentIntensityAnalyzer()
+except LookupError:
+    import nltk
+    nltk.download('vader_lexicon', quiet=True)
+    sia = SentimentIntensityAnalyzer()
 
 from pydantic import BaseModel
 
 class LoginRequest(BaseModel):
     username: str
-    password: str
+    password: Optional[str] = None
 
 @router.post("/login")
 async def login(data: LoginRequest, request: Request, db: AsyncSession = Depends(get_db_session)):
-    """Authenticates the user silently based on pre-defined mock profiles."""
-    username = data.username.lower().strip()
-    if username not in MOCK_PROFILES:
-        raise HTTPException(status_code=401, detail="Invalid credentials. Cannot reach Reddit servers.")
-        
-    profile = MOCK_PROFILES[username]
-    
-    # Store or update user in database
-    result = await db.execute(select(User).where(User.reddit_id == profile["reddit_id"]))
+    """Authenticates the user by physically scraping their Profile via Playwright."""
+    username = data.username.strip()
+    if not username:
+        raise HTTPException(status_code=400, detail="Username is required")
+
+    result = await db.execute(select(User).where(User.reddit_username.ilike(username)))
     user = result.scalar_one_or_none()
     
-    # Fake refresh token
-    refresh_token = f"mock_refresh_token_for_{username}_{secrets.token_urlsafe(8)}"
-    
     if not user:
+        # Phase 7: Organic Profile Verification
+        try:
+            profile_comments = await scrape_reddit_user(username)
+        except Exception:
+            raise HTTPException(status_code=404, detail="Could not physically reach Reddit profile.")
+            
+        if not profile_comments:
+            raise HTTPException(status_code=404, detail="Reddit user doesn't exist or has 0 public comments!")
+            
+        # Valid User! Register them.
         user = User(
             reddit_username=username,
-            reddit_id=profile["reddit_id"],
-            refresh_token=refresh_token
+            reddit_id=f"organic_u_{username.lower()}",
+            refresh_token=f"mock_refresh_token_for_{username}_{secrets.token_urlsafe(8)}"
         )
         db.add(user)
-    else:
-        user.refresh_token = refresh_token
-        user.reddit_username = username
+        await db.commit()
+        await db.refresh(user)
         
-    await db.commit()
-    await db.refresh(user)
-    
+        # Inject their public behavioral NLP into their personal SQLite vault
+        for c in profile_comments:
+            scores = sia.polarity_scores(c["body"])
+            compound = scores['compound']
+            if compound >= 0.05:
+                label = "positive"
+            elif compound <= -0.05:
+                label = "negative"
+            else:
+                label = "neutral"
+                
+                
+            db_comment = Comment(
+                user_id=user.id,
+                comment_id=f"organic_hist_{random.randint(1000,999999)}",
+                subreddit=c["subreddit"],
+                thread_id="vault_history",
+                thread_title=c.get("title", "Organic Personal Account History"),
+                body=c["body"],
+                created_utc=int(time.time()) - random.randint(100, 300000),
+                score=c["score"],
+                sentiment_score=compound,
+                sentiment_label=label,
+                is_spam=c.get("is_spam", False)
+            )
+            # Simulating incremental sync (upsert)
+            db.add(db_comment)
+            
+        await db.commit()
+
     # Create persistent session
     request.session['user_id'] = user.id
     
-    # Redirect back to frontend dashboard automatically
-    return {"message": "Success", "username": username}
+    return {"message": "Success", "username": user.reddit_username}
 
 
 @router.post("/logout")

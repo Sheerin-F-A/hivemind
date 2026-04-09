@@ -118,17 +118,19 @@ function updateDOMCounters(data) {
         
         if (breakdownSource) {
             const largeScore = card.querySelector('.large-score');
-            if (largeScore) largeScore.textContent = breakdownSource.positive; // Roughly use positive as the card's main number
+            
+            // Mathematically normalize an exact score 0-100 logic
+            let cardScore = Math.floor(breakdownSource.positive + (breakdownSource.neutral * 0.5));
+            if (largeScore) largeScore.textContent = cardScore;
             
             const cardLabel = card.querySelector('.score-label');
             if (cardLabel) {
-                // If positive is highest => positive, else negative, else neutral
                 let labelText = 'Neutral';
                 let cls = 'neutral';
                 let col = '#86868B';
-                if (breakdownSource.positive > breakdownSource.negative && breakdownSource.positive >= 40) {
+                if (cardScore >= 60) {
                     labelText = 'Positive'; cls = 'positive'; col = '#4CAF50';
-                } else if (breakdownSource.negative > breakdownSource.positive && breakdownSource.negative >= 40) {
+                } else if (cardScore <= 40) {
                     labelText = 'Negative'; cls = 'negative'; col = '#FF5252';
                 }
                 cardLabel.className = `score-label ${cls}`;

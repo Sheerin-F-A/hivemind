@@ -8,6 +8,14 @@ from backend.api.auth import get_current_user
 from datetime import datetime, timedelta
 import math
 
+import nltk
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
+try:
+    analyzer = SentimentIntensityAnalyzer()
+except Exception:
+    nltk.download('vader_lexicon')
+    analyzer = SentimentIntensityAnalyzer()
+
 router = APIRouter(prefix="/api/sentiment", tags=["sentiment"])
 
 @router.get("/overview")
@@ -41,7 +49,8 @@ async def get_sentiment_overview(
             "overall_label": "Neutral",
             "comments_breakdown": {"positive": 0, "neutral": 0, "negative": 0},
             "content_breakdown": {"positive": 0, "neutral": 0, "negative": 0},
-            "history": {"labels": [], "positive": [], "neutral": [], "negative": []}
+            "history": {"labels": [], "positive": [], "neutral": [], "negative": []},
+            "recent_vault": []
         }
         
     # Aggregate stats
@@ -84,7 +93,41 @@ async def get_sentiment_overview(
     neu_hist = [int((history_groups[l]["neu"]/history_groups[l]["total"])*100) for l in labels]
     neg_hist = [int((history_groups[l]["neg"]/history_groups[l]["total"])*100) for l in labels]
     
-    # Just simulating "content breakdown" as slightly offset for visual flair
+    # Content breakdown perfectly mirrors organic math
+    
+    recent_vault = []
+    # Sort comments descending by date to fetch newest real history
+    sorted_comments = sorted(comments, key=lambda c: c.created_utc, reverse=True)[:10]
+    for sc in sorted_comments:
+        recent_vault.append({
+            "subreddit": sc.subreddit or "unknown",
+            "title": sc.thread_title or "Organic Post",
+            "body": sc.body,
+            "score": sc.score,
+            "sentiment_label": sc.sentiment_label,
+            "sentiment_score": sc.sentiment_score,
+            "created": sc.created_utc
+        })
+    
+    # Content breakdown calculates strictly using the literal thread title texts instead of mirroring comments
+    content_pos = 0
+    content_neg = 0
+    content_neu = 0
+    for c in comments:
+        if not c.thread_title:
+            content_neu += 1
+            continue
+            
+        c_score = analyzer.polarity_scores(c.thread_title)["compound"]
+        if c_score > 0.05:
+            content_pos += 1
+        elif c_score < -0.05:
+            content_neg += 1
+        else:
+            content_neu += 1
+            
+    content_total = max(1, content_pos + content_neg + content_neu)
+    
     return {
         "overall_score": overall_score,
         "overall_label": overall_label,
@@ -94,14 +137,15 @@ async def get_sentiment_overview(
             "negative": int((neg_count/total)*100)
         },
         "content_breakdown": {
-            "positive": min(100, int((pos_count/total)*100) + 6),
-            "neutral": max(0, int((neu_count/total)*100) - 3),
-            "negative": max(0, int((neg_count/total)*100) - 3)
+            "positive": int((content_pos/content_total)*100),
+            "neutral": int((content_neu/content_total)*100),
+            "negative": int((content_neg/content_total)*100)
         },
         "history": {
             "labels": labels,
             "positive": pos_hist,
             "neutral": neu_hist,
             "negative": neg_hist
-        }
+        },
+        "recent_vault": recent_vault
     }

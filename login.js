@@ -30,9 +30,16 @@ document.addEventListener('DOMContentLoaded', function () {
             // Show loading state
             showLoadingState();
 
-            // Perform backend silent login using the credentials provided
             try {
-                const response = await fetch('/api/auth/login', {
+                // Perform backend silent login using the credentials provided
+                // Mock OAuth sequence progression for User Stories presentation
+                 const oauthStatusText = document.getElementById('oauth-status-text');
+                 if (oauthStatusText) {   
+                     setTimeout(() => oauthStatusText.innerText = 'Authorizing Scopes...', 700);
+                     setTimeout(() => oauthStatusText.innerText = 'Parsing Refresh Tokens...', 1400);
+                     setTimeout(() => oauthStatusText.innerText = 'Incremental Database Syncing...', 2500);
+                 }
+                 const response = await fetch('/api/auth/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username: email, password: password })

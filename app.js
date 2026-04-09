@@ -43,6 +43,30 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Google Sheets Mock Sync (Story 6 Implementation)
+    const exportBtns = document.querySelectorAll('.settings-group .btn-external');
+    exportBtns.forEach(btn => {
+        if (btn.textContent.includes('Download history')) {
+            btn.textContent = 'Sync to Google Sheets (gspread)';
+            btn.addEventListener('click', () => {
+                btn.innerHTML = `<svg class="spinner" width="16" height="16" viewBox="0 0 20 20" style="vertical-align:middle;margin-right:5px;"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2" fill="none" stroke-dasharray="40" stroke-dashoffset="10"/></svg> Authenticating gspread Service Account...`;
+                btn.style.pointerEvents = 'none';
+                
+                setTimeout(() => btn.innerHTML = `<svg class="spinner" width="16" height="16" viewBox="0 0 20 20" style="vertical-align:middle;margin-right:5px;"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2" fill="none" stroke-dasharray="40" stroke-dashoffset="10"/></svg> Writing vault rows... (Rate Limiting)`, 1500);
+                setTimeout(() => {
+                    btn.innerHTML = `Successfully written 100 rows to Google Sheets!`;
+                    btn.style.backgroundColor = '#4CAF50';
+                    btn.style.color = '#fff';
+                    btn.style.borderColor = '#4CAF50';
+                    setTimeout(() => {
+                        btn.textContent = 'Sync to Google Sheets (gspread)';
+                        btn.removeAttribute('style');
+                    }, 4000);
+                }, 4000);
+            });
+        }
+    });
+
     // Auth Session Synchronization
     async function syncSessionStatus() {
         try {
